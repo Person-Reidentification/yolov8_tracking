@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import os
+import os.path as osp
 # limit the number of cpus used by high performance libraries
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -17,37 +18,36 @@ import torch.backends.cudnn as cudnn
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 strongsort root directory
-WEIGHTS = ROOT / 'weights'
-
+WEIGHTS = osp.join(ROOT, 'weights')
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
-if str(ROOT / 'yolov8') not in sys.path:
-    sys.path.append(str(ROOT / 'yolov8'))  # add yolov5 ROOT to PATH
-if str(ROOT / 'trackers' / 'strongsort') not in sys.path:
-    sys.path.append(str(ROOT / 'trackers' / 'strongsort'))  # add strong_sort ROOT to PATH
+yolo_path = osp.join(ROOT, 'yolov8')
+if yolo_path not in sys.path:
+    sys.path.append(yolo_path)  # add yolov5 ROOT to PATH
+if osp.join(ROOT, 'trackers', 'bytetrack') not in sys.path:
+    sys.path.append(osp.join(ROOT, 'trackers', 'bytetrack'))  # add strong_sort ROOT to PATH
 
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 import logging
-from yolov8.ultralytics.nn.autobackend import AutoBackend
+from ultralytics.nn.autobackend import AutoBackend
 from yolov8.ultralytics.yolo.data.dataloaders.stream_loaders import LoadImages, LoadStreams
-from yolov8.ultralytics.yolo.data.utils import IMG_FORMATS, VID_FORMATS
-from yolov8.ultralytics.yolo.utils import DEFAULT_CFG, LOGGER, SETTINGS, callbacks, colorstr, ops
-from yolov8.ultralytics.yolo.utils.checks import check_file, check_imgsz, check_imshow, print_args, check_requirements
-from yolov8.ultralytics.yolo.utils.files import increment_path
-from yolov8.ultralytics.yolo.utils.torch_utils import select_device
-from yolov8.ultralytics.yolo.utils.ops import Profile, non_max_suppression, scale_boxes, process_mask, process_mask_native
-from yolov8.ultralytics.yolo.utils.plotting import Annotator, colors, save_one_box
+from ultralytics.yolo.data.utils import IMG_FORMATS, VID_FORMATS
+from ultralytics.yolo.utils import DEFAULT_CFG, LOGGER, SETTINGS, callbacks, colorstr, ops
+from ultralytics.yolo.utils.checks import check_file, check_imgsz, check_imshow, print_args, check_requirements
+from ultralytics.yolo.utils.files import increment_path
+from ultralytics.yolo.utils.torch_utils import select_device
+from ultralytics.yolo.utils.ops import Profile, non_max_suppression, scale_boxes, process_mask, process_mask_native
+from ultralytics.yolo.utils.plotting import Annotator, colors, save_one_box
 
 from trackers.multi_tracker_zoo import create_tracker
-
 
 @torch.no_grad()
 def run(
         source='0',
-        yolo_weights=WEIGHTS / 'yolov5m.pt',  # model.pt path(s),
-        reid_weights=WEIGHTS / 'osnet_x0_25_msmt17.pt',  # model.pt path,
-        tracking_method='strongsort',
+        yolo_weights=osp.join(WEIGHTS, 'yolov5m.pt'),  # model.pt path(s),
+        reid_weights=osp.join(WEIGHTS, 'osnet_x0_25_msmt17.pt'),  # model.pt path,
+        tracking_method='bytetrack',
         tracking_config=None,
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold
@@ -66,7 +66,7 @@ def run(
         augment=False,  # augmented inference
         visualize=False,  # visualize features
         update=False,  # update all models
-        project=ROOT / 'runs' / 'track',  # save results to project/name
+        project=osp.join(ROOT, 'runs', 'track'),  # save results to project/name
         name='exp',  # save results to project/name
         exist_ok=False,  # existing project/name ok, do not increment
         line_thickness=2,  # bounding box thickness (pixels)
@@ -314,8 +314,8 @@ def run(
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--yolo-weights', nargs='+', type=Path, default=WEIGHTS / 'yolov8s-seg.pt', help='model.pt path(s)')
-    parser.add_argument('--reid-weights', type=Path, default=WEIGHTS / 'lmbn_n_cuhk03_d.pt')
+    parser.add_argument('--yolo-weights', nargs='+', type=Path, default=osp.join(WEIGHTS, 'yolov8s-seg.pt'), help='model.pt path(s)')
+    parser.add_argument('--reid-weights', type=Path, default=osp.join(WEIGHTS, 'lmbn_n_cuhk03_d.pt'))
     parser.add_argument('--tracking-method', type=str, default='deepocsort', help='deepocsort, botsort, strongsort, ocsort, bytetrack')
     parser.add_argument('--tracking-config', type=Path, default=None)
     parser.add_argument('--source', type=str, default='0', help='file/dir/URL/glob, 0 for webcam')  
@@ -337,7 +337,7 @@ def parse_opt():
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--visualize', action='store_true', help='visualize features')
     parser.add_argument('--update', action='store_true', help='update all models')
-    parser.add_argument('--project', default=ROOT / 'runs' / 'track', help='save results to project/name')
+    parser.add_argument('--project', default=osp.join(ROOT, 'runs', 'track'), help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--line-thickness', default=2, type=int, help='bounding box thickness (pixels)')

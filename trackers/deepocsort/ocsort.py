@@ -15,7 +15,7 @@ from .association import *
 from .embedding import EmbeddingComputer
 from .cmc import CMCComputer
 from reid_multibackend import ReIDDetectMultiBackend
-from yolov8.ultralytics.yolo.utils.ops import xyxy2xywh
+from ultralytics.yolo.utils.ops import xyxy2xywh
 
 
 
